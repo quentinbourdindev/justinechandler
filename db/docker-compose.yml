@@ -1,0 +1,34 @@
+# =====================================================================
+# docker-compose.yml — Postgres 16 local pour développer / tester.
+# ---------------------------------------------------------------------
+#   docker compose up -d
+#   ./run.sh   (avec les variables de connexion ci-dessous)
+#
+# Le port hôte par défaut est 5433 pour ne PAS entrer en conflit avec
+# un PostgreSQL déjà installé localement (souvent sur 5432).
+# Surchargez via un fichier .env (voir .env.example).
+# =====================================================================
+
+services:
+  db:
+    image: postgres:16
+    container_name: image_coaching_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-image_coaching}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-image_coaching}
+      POSTGRES_DB: ${POSTGRES_DB:-image_coaching}
+      # Localisation / encodage cohérents pour un projet FR.
+      LANG: fr_FR.utf8
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-image_coaching} -d ${POSTGRES_DB:-image_coaching}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

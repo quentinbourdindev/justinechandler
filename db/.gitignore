@@ -1,0 +1,6 @@
+# Secrets de connexion locaux — ne jamais versionner.
+.env
+
+# Artefacts de l'outillage local (ruflo / claude-flow) — hors livrable DB.
+.claude-flow/
+ruvector.db

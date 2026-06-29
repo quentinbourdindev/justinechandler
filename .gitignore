@@ -1,0 +1,44 @@
+# Dépendances
+/node_modules
+/.pnp
+.pnp.*
+
+# Build Next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+
+# Environnement — JAMAIS de secret commité
+.env
+.env.local
+.env.*.local
+
+# Stockage local de dev (adaptateur disque lib/storage)
+/storage-dev/
+/public/uploads/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Système
+.DS_Store
+*.pem
+Thumbs.db
+
+# Tests / couverture
+/coverage
+
+# Outillage ruflo / claude-flow / Claude Code (hors livrable Alia)
+/.claude/
+/.claude-flow/
+/.swarm/
+/ruvector.db
+/db/.claude-flow/
+/db/ruvector.db
+
+# TypeScript
+*.tsbuildinfo
