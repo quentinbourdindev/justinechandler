@@ -20,3 +20,20 @@ export function formatDateTimeFr(value: Date | string): string {
     minute: "2-digit",
   }).format(toDate(value));
 }
+
+/** « lundi 3 février » — clé/libellé de jour. */
+export function formatDayFr(value: Date | string): string {
+  return new Intl.DateTimeFormat("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(toDate(value));
+}
+
+/** « 10:30 » — heure seule. */
+export function formatTimeFr(value: Date | string): string {
+  return new Intl.DateTimeFormat("fr-FR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(toDate(value));
+}

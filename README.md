@@ -104,6 +104,7 @@ Ils sont aussi rappelés sur la page `/login` **hors production**.
 | `npm run demo:smoke` | Smoke-test HTTP auth + boussole (serveur lancé). `BASE=http://localhost:3100 npm run demo:smoke` |
 | `npm run demo:smoke:p1` | Smoke-test HTTP du parcours Pilier 1 (onboarding → soumission → validation → déblocage). |
 | `npm run demo:smoke:p234` | Smoke-test HTTP des Piliers 2→3→4 (rendu, revue coach, fiche détaillée, chaîne de gate). |
+| `npm run demo:smoke:public` | Smoke-test HTTP du funnel public (landing, candidature, RDV) + preuve d'isolation PII. |
 
 ---
 
@@ -168,7 +169,7 @@ tests/                 tests d'intégration (node:test)
 
 | Espace | Disponible | À venir |
 | --- | --- | --- |
-| **Public** | Accueil, connexion | Landing complète, candidature (13 Q), prise de RDV (Phase 2) |
+| **Public** | **Landing « Alia »** (statique) · **candidature** (13 questions → `applications`, consentement, email d'accusé) · **prise de RDV** (lecture `public_availability`, réservation `book_slot`, créneaux pris/fermés grisés, **aucune PII**) · **mentions légales** & **confidentialité** | Triage candidatures + dispos coach + reset (Phase 2, en cours) |
 | **Cliente** (mobile-first) | Connexion + mot de passe forcé · onboarding & consentements · dashboard (boussole + timeline cliquable + notifications) · **les 4 piliers** : P1 Identité (3 mots + moodboard), P2 Mise en valeur (colorimétrie + morphologie + recommandations), P3 Tri (garder/sortir + critères), P4 Construction (3 catégories + looks) — soumission à chaque pilier, uploads photos | IA, messagerie, RGPD, aide-achat (Phases 3–5) |
 | **Coach** (desktop/tablette) | Connexion · dashboard (file `À valider` + portefeuille) · **fiche cliente détaillée** (boussole, profils couleur/morpho, tri gardé/sorti, garde-robe + looks) · **écran de validation** par pilier (Valider / Retoucher / Commenter) | Triage candidatures, dispos, messagerie (Phases 2–4) |
 
@@ -186,10 +187,18 @@ publique et y pointer `DATABASE_URL_PUBLIC` :
 
 ```sql
 CREATE ROLE app_anon LOGIN PASSWORD '...';
-GRANT SELECT ON public_availability TO app_anon;
+GRANT SELECT ON public_availability TO app_anon;          -- RDV (aucune PII)
+GRANT INSERT ON applications TO app_anon;                 -- candidature publique
 GRANT EXECUTE ON FUNCTION book_slot(uuid, text, text, citext, text, text, timestamptz) TO app_anon;
--- NE PAS accorder l'accès à availability_slots ni discovery_bookings.
+-- NE PAS accorder l'accès à availability_slots ni discovery_bookings
+-- ni en lecture sur applications (la candidate ne lit jamais les autres).
 ```
+
+> **Migration Phase 6 à prévoir** : passer `book_slot` en `SECURITY DEFINER`
+> (avec un `search_path` fixe) pour que `app_anon` réserve **via la fonction**
+> sans aucun droit direct sur `availability_slots` / `discovery_bookings`. Sans
+> cela, `EXECUTE book_slot` sous un rôle réduit échouerait (la fonction écrit
+> dans ces tables avec les droits de l'appelant).
 
 ```env
 DATABASE_URL_PUBLIC=postgresql://app_anon:...@db:5432/image_coaching
@@ -227,6 +236,19 @@ DATABASE_URL_PUBLIC=postgresql://app_anon:...@db:5432/image_coaching
   base car le gate `validate_pilier` les exige à la validation).
 - **Tables IA** (`ai_requests` / `ai_outputs`, brief §3) absentes du schéma →
   migration à prévoir en **Phase 3** (hors périmètre actuel).
+- **Emails (Phase 2)** : un seul adaptateur **SMTP** (`nodemailer`), console en
+  dev. En prod = **Resend** (host `smtp.resend.com`, port 465, user `resend`,
+  pass = clé API) — le même adaptateur couvre Scaleway TEM / IONOS. Envois
+  **non bloquants** (toute erreur est loggée, jamais propagée à l'UX).
+- **Funnel public & PII** : la candidature (INSERT `applications`) et le RDV
+  (`public_availability` + `book_slot`) passent par le **seam public**
+  (`publicSql`). Aucun écran public ne lit `discovery_bookings`,
+  `availability_slots` ni les autres candidatures (vérifié par un smoke
+  d'isolation : le nom d'un prospect réservé n'apparaît jamais dans le HTML public).
+- **iCloud / `.next`** : le projet vit sur un Desktop iCloud ; le serveur de dev
+  écrit `.next` en continu → iCloud crée des copies de conflit (`… 2.ts`). Ces
+  artefacts sont gitignorés et `tsconfig` **exclut `.next`** du typecheck
+  (`next build` valide les types de routes de son côté).
 
 ---
 
@@ -236,7 +258,7 @@ DATABASE_URL_PUBLIC=postgresql://app_anon:...@db:5432/image_coaching
 | --- | --- |
 | **0 — Fondations** ✅ | Scaffolding, design system, `lib/*`, auth complète (login, changement forcé, guards, CSRF, rate-limit, invalidation session), comptes démo. |
 | **1 — Socle** ✅ | Onboarding + consentements ; les **4 piliers** côté cliente (Identité, Mise en valeur, Tri, Construction) ; **validation par pilier** côté coach + **fiche cliente détaillée** ; gate de bout en bout ; notifications ; uploads photos consentement-gated. |
-| 2 — Public & emails | Landing, candidature, prise de RDV ; triage candidatures ; emails transactionnels. |
+| **2 — Public & emails** 🚧 | **Funnel public livré** : landing, candidature (13 Q), prise de RDV (sans PII), pages légales, emails (accusé candidature + confirmation RDV). **À suivre** : triage candidatures + gestion des dispos + reset coach. |
 | 3 — IA Mistral | Analyses colorimétrie/morpho, conseils looks, suivi — serveur only, journalisé, sous consentement. |
 | 4 — Messagerie | Chat cliente ↔ coach temps réel (LISTEN/NOTIFY → SSE), accusés, pièces jointes. |
 | 5 — Transverse & RGPD | Aide à l'achat en boutique, profil, export/suppression RGPD, centre de notifications. |

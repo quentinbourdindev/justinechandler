@@ -10,7 +10,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
-  serverExternalPackages: ["postgres", "bcryptjs"],
+  serverExternalPackages: ["postgres", "bcryptjs", "nodemailer"],
   poweredByHeader: false,
 };
 

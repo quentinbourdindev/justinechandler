@@ -26,6 +26,48 @@ export const loginSchema = z.object({
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 
+const isoDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide")
+  .refine((v) => {
+    const d = new Date(v + "T00:00:00Z");
+    if (Number.isNaN(d.getTime())) return false;
+    const today = new Date().toISOString().slice(0, 10);
+    return v >= "1900-01-01" && v <= today;
+  }, "Date de naissance invalide");
+
+const shortText = (max = 300) => z.string().trim().min(1, "Champ requis").max(max);
+const longText = z.string().trim().min(1, "Champ requis").max(5000);
+
+/** Candidature publique — 13 questions (mapping table applications). */
+export const candidatureSchema = z.object({
+  fullName: shortText(200),
+  instagram: shortText(200),
+  email: emailSchema,
+  birthDate: isoDate,
+  profession: shortText(500),
+  motivation: longText,
+  currentImage: longText,
+  goal: longText,
+  wordsToday: shortText(500),
+  wordsToEmbody: shortText(500),
+  mainBlocker: longText,
+  whyNow: longText,
+  commitmentLevel: shortText(1000),
+});
+export type CandidatureInput = z.infer<typeof candidatureSchema>;
+
+/** Réservation d'appel découverte (page publique). */
+export const bookingSchema = z.object({
+  slotId: uuidSchema,
+  firstName: shortText(200),
+  lastName: shortText(200),
+  email: emailSchema,
+  phone: z.string().trim().max(40).optional().default(""),
+  message: z.string().trim().max(2000).optional().default(""),
+});
+export type BookingInput = z.infer<typeof bookingSchema>;
+
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Mot de passe actuel requis").max(128),

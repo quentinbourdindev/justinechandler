@@ -12,6 +12,7 @@
     "demo:smoke": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-smoke.ts",
     "demo:smoke:p1": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-smoke-p1.ts",
     "demo:smoke:p234": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-smoke-p234.ts",
+    "demo:smoke:public": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-smoke-public.ts",
     "test": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx --test tests/*.test.ts"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
     "clsx": "^2.1.1",
     "jose": "^5.9.6",
     "next": "^15.1.6",
+    "nodemailer": "^6.10.1",
     "postgres": "^3.4.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -29,6 +31,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.5",
+    "@types/nodemailer": "^6.4.24",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
     "autoprefixer": "^10.4.20",

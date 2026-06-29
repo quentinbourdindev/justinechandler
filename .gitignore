@@ -39,6 +39,8 @@ Thumbs.db
 /ruvector.db
 /db/.claude-flow/
 /db/ruvector.db
+*.rvf
+*.rvf.lock
 
 # TypeScript
 *.tsbuildinfo
