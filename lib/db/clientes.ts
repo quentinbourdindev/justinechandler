@@ -30,6 +30,19 @@ export async function getClienteById(clienteId: string): Promise<Cliente | null>
   return rows[0] ?? null;
 }
 
+/** Prénom + email d'une cliente (pour les emails transactionnels). */
+export async function getClienteContact(
+  clienteId: string
+): Promise<{ firstName: string; email: string } | null> {
+  const rows = await sql<{ firstName: string; email: string }[]>`
+    SELECT c.first_name AS "firstName", u.email AS email
+      FROM clientes c JOIN users u ON u.id = c.user_id
+     WHERE c.id = ${clienteId}
+     LIMIT 1
+  `;
+  return rows[0] ?? null;
+}
+
 /** Les 3 mots-boussole (affichés en permanence dans l'espace cliente). */
 export function boussoleFromCliente(c: Cliente | null): BoussoleWords {
   return {

@@ -105,6 +105,7 @@ Ils sont aussi rappelés sur la page `/login` **hors production**.
 | `npm run demo:smoke:p1` | Smoke-test HTTP du parcours Pilier 1 (onboarding → soumission → validation → déblocage). |
 | `npm run demo:smoke:p234` | Smoke-test HTTP des Piliers 2→3→4 (rendu, revue coach, fiche détaillée, chaîne de gate). |
 | `npm run demo:smoke:public` | Smoke-test HTTP du funnel public (landing, candidature, RDV) + preuve d'isolation PII. |
+| `npm run demo:smoke:coach` | Smoke-test HTTP de la partie coach (candidatures, dispos, reset) + PII admin visible. |
 
 ---
 
@@ -169,9 +170,9 @@ tests/                 tests d'intégration (node:test)
 
 | Espace | Disponible | À venir |
 | --- | --- | --- |
-| **Public** | **Landing « Alia »** (statique) · **candidature** (13 questions → `applications`, consentement, email d'accusé) · **prise de RDV** (lecture `public_availability`, réservation `book_slot`, créneaux pris/fermés grisés, **aucune PII**) · **mentions légales** & **confidentialité** | Triage candidatures + dispos coach + reset (Phase 2, en cours) |
+| **Public** | **Landing « Alia »** (statique) · **candidature** (13 questions → `applications`, consentement, email d'accusé) · **prise de RDV** (lecture `public_availability`, réservation `book_slot`, créneaux pris/fermés grisés, **aucune PII**) · **mentions légales** & **confidentialité** | IA (Phase 3) |
 | **Cliente** (mobile-first) | Connexion + mot de passe forcé · onboarding & consentements · dashboard (boussole + timeline cliquable + notifications) · **les 4 piliers** : P1 Identité (3 mots + moodboard), P2 Mise en valeur (colorimétrie + morphologie + recommandations), P3 Tri (garder/sortir + critères), P4 Construction (3 catégories + looks) — soumission à chaque pilier, uploads photos | IA, messagerie, RGPD, aide-achat (Phases 3–5) |
-| **Coach** (desktop/tablette) | Connexion · dashboard (file `À valider` + portefeuille) · **fiche cliente détaillée** (boussole, profils couleur/morpho, tri gardé/sorti, garde-robe + looks) · **écran de validation** par pilier (Valider / Retoucher / Commenter) | Triage candidatures, dispos, messagerie (Phases 2–4) |
+| **Coach** (desktop/tablette) | Connexion · dashboard (file `À valider` + portefeuille) · fiche cliente détaillée · validation par pilier · **triage des candidatures** (filtre, statut, **conversion → invitation email**, suppression) · **disponibilités** (ouvrir/fermer des créneaux, voir/annuler les réservations avec PII admin) · **reset mot de passe** + **création directe d'une cliente** (avec invitation) | Messagerie (Phase 4) |
 
 ---
 
@@ -252,13 +253,28 @@ DATABASE_URL_PUBLIC=postgresql://app_anon:...@db:5432/image_coaching
 
 ---
 
+## ⚠️ À compléter avant la mise en ligne
+
+Les **pages légales** (`/mentions-legales`, `/confidentialite`) contiennent des
+**placeholders `[à compléter]`** que la cliente doit fournir avant publication :
+
+- **Mentions légales** : raison sociale, statut juridique, **SIRET**, **adresse**,
+  hébergeur exact, **email de contact**, directrice de la publication.
+- **Confidentialité** : coordonnées du responsable de traitement, **email pour
+  exercer les droits RGPD**, durées de conservation précises.
+
+> Ces mentions sont **obligatoires en France** (RGPD + LCEN). Le site ne doit pas
+> être mis en ligne tant que ces champs ne sont pas renseignés. Texte à éditer
+> directement dans `app/(public)/mentions-legales/page.tsx` et
+> `app/(public)/confidentialite/page.tsx`.
+
 ## Feuille de route
 
 | Phase | Contenu |
 | --- | --- |
 | **0 — Fondations** ✅ | Scaffolding, design system, `lib/*`, auth complète (login, changement forcé, guards, CSRF, rate-limit, invalidation session), comptes démo. |
 | **1 — Socle** ✅ | Onboarding + consentements ; les **4 piliers** côté cliente (Identité, Mise en valeur, Tri, Construction) ; **validation par pilier** côté coach + **fiche cliente détaillée** ; gate de bout en bout ; notifications ; uploads photos consentement-gated. |
-| **2 — Public & emails** 🚧 | **Funnel public livré** : landing, candidature (13 Q), prise de RDV (sans PII), pages légales, emails (accusé candidature + confirmation RDV). **À suivre** : triage candidatures + gestion des dispos + reset coach. |
+| **2 — Public & emails** ✅ | Funnel public (landing, candidature, RDV sans PII, légales) + emails ; **partie coach** : triage candidatures + conversion/invitation, gestion des disponibilités, reset mot de passe, création directe de cliente. |
 | 3 — IA Mistral | Analyses colorimétrie/morpho, conseils looks, suivi — serveur only, journalisé, sous consentement. |
 | 4 — Messagerie | Chat cliente ↔ coach temps réel (LISTEN/NOTIFY → SSE), accusés, pièces jointes. |
 | 5 — Transverse & RGPD | Aide à l'achat en boutique, profil, export/suppression RGPD, centre de notifications. |

@@ -13,6 +13,7 @@
     "demo:smoke:p1": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-smoke-p1.ts",
     "demo:smoke:p234": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-smoke-p234.ts",
     "demo:smoke:public": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-smoke-public.ts",
+    "demo:smoke:coach": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-smoke-coach.ts",
     "test": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx --test tests/*.test.ts"
   },
   "dependencies": {

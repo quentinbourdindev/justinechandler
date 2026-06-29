@@ -14,6 +14,7 @@ import { MoodboardGallery, type GalleryItem } from "@/components/MoodboardGaller
 import { Card, CardTitle, CardMuted } from "@/components/ui/Card";
 import { PILIERS_META } from "@/lib/piliers-meta";
 import { buttonClasses } from "@/components/ui/Button";
+import { ResetPasswordButton } from "@/components/coach/ResetPasswordButton";
 import { WARDROBE_CATEGORIES } from "@/lib/db/types";
 
 export const metadata: Metadata = { title: "Fiche cliente" };
@@ -82,14 +83,19 @@ export default async function FicheClientePage({
         <Link href="/coach/tableau-de-bord" className="text-sm text-navy-500 underline">
           ← Tableau de bord
         </Link>
-        <h1 className="mt-2 font-display text-3xl text-navy-800">
-          {cliente.first_name} {cliente.last_name}
-        </h1>
-        <p className="mt-1 text-sm text-navy-500">
-          {cliente.city ? `${cliente.city} · ` : ""}
-          {age !== null ? `${age} ans · ` : ""}
-          <span className="capitalize">{cliente.status.replace("_", " ")}</span>
-        </p>
+        <div className="mt-2 flex items-start justify-between gap-3">
+          <div>
+            <h1 className="font-display text-3xl text-navy-800">
+              {cliente.first_name} {cliente.last_name}
+            </h1>
+            <p className="mt-1 text-sm text-navy-500">
+              {cliente.city ? `${cliente.city} · ` : ""}
+              {age !== null ? `${age} ans · ` : ""}
+              <span className="capitalize">{cliente.status.replace("_", " ")}</span>
+            </p>
+          </div>
+          <ResetPasswordButton clienteId={cliente.id} />
+        </div>
       </div>
 
       <Card>

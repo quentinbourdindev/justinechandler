@@ -68,6 +68,17 @@ export const bookingSchema = z.object({
 });
 export type BookingInput = z.infer<typeof bookingSchema>;
 
+/** Création directe d'une cliente par l'admin (coach). */
+export const createClienteSchema = z.object({
+  email: emailSchema,
+  firstName: shortText(200),
+  lastName: shortText(200),
+  birthDate: z.union([z.literal(""), isoDate]).optional().default(""),
+  city: z.string().trim().max(200).optional().default(""),
+  situation: z.string().trim().max(2000).optional().default(""),
+});
+export type CreateClienteInput = z.infer<typeof createClienteSchema>;
+
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Mot de passe actuel requis").max(128),
