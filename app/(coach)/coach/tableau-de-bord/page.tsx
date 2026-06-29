@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { requireCoach } from "@/lib/auth/guards";
 import { getPendingValidations } from "@/lib/db/piliers";
 import { listClientes } from "@/lib/db/clientes";
@@ -43,22 +44,24 @@ export default async function CoachDashboard() {
           <ul className="grid gap-3 sm:grid-cols-2">
             {pending.map((p) => (
               <li key={p.pilier_id}>
-                <Card className="flex items-center justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-base">
-                      {p.first_name} {p.last_name}
-                    </CardTitle>
-                    <CardMuted>
-                      Pilier {p.numero} — {PILIERS_META[p.numero].nom}
-                    </CardMuted>
-                    <CardMuted className="mt-0.5 text-xs">
-                      Soumis le {formatDateTimeFr(p.submitted_at)}
-                    </CardMuted>
-                  </div>
-                  <span className="rounded-full bg-jaune-100 px-2.5 py-1 text-xs font-medium text-navy-700">
-                    Soumis
-                  </span>
-                </Card>
+                <Link href={`/coach/validations/${p.pilier_id}`} className="block">
+                  <Card className="flex items-center justify-between gap-4 transition-colors hover:border-navy-300">
+                    <div>
+                      <CardTitle className="text-base">
+                        {p.first_name} {p.last_name}
+                      </CardTitle>
+                      <CardMuted>
+                        Pilier {p.numero} — {PILIERS_META[p.numero].nom}
+                      </CardMuted>
+                      <CardMuted className="mt-0.5 text-xs">
+                        Soumis le {formatDateTimeFr(p.submitted_at)}
+                      </CardMuted>
+                    </div>
+                    <span className="rounded-full bg-jaune-100 px-2.5 py-1 text-xs font-medium text-navy-700">
+                      À valider →
+                    </span>
+                  </Card>
+                </Link>
               </li>
             ))}
           </ul>
@@ -81,7 +84,8 @@ export default async function CoachDashboard() {
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {clientes.map((c) => (
               <li key={c.id}>
-                <Card>
+                <Link href={`/coach/clientes/${c.id}`} className="block">
+                  <Card className="transition-colors hover:border-navy-300">
                   <CardTitle className="text-base">
                     {c.first_name} {c.last_name}
                   </CardTitle>
@@ -97,7 +101,8 @@ export default async function CoachDashboard() {
                   <CardMuted className="mt-1.5 text-xs">
                     {c.validated_count}/{c.total_piliers} piliers validés
                   </CardMuted>
-                </Card>
+                  </Card>
+                </Link>
               </li>
             ))}
           </ul>

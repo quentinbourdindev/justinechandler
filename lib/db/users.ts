@@ -53,6 +53,14 @@ export async function touchLastLogin(id: string): Promise<void> {
   await sql`UPDATE users SET last_login_at = now() WHERE id = ${id}`;
 }
 
+/** Ids des comptes coach (destinataires des notifications de soumission). */
+export async function getCoachUserIds(): Promise<string[]> {
+  const rows = await sql<{ id: string }[]>`
+    SELECT id FROM users WHERE role = 'coach'
+  `;
+  return rows.map((r) => r.id);
+}
+
 // --- Fonctions métier de la base (mot de passe) ----------------------------
 
 /**

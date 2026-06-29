@@ -1,5 +1,6 @@
 import { requireCliente } from "@/lib/auth/guards";
 import { getClienteByUserId, boussoleFromCliente } from "@/lib/db/clientes";
+import { getPilierForCliente } from "@/lib/db/piliers";
 import { Boussole } from "@/components/Boussole";
 import { Brand } from "@/components/Brand";
 import { LogoutButton } from "@/components/auth/LogoutButton";
@@ -7,12 +8,18 @@ import { ToastProvider } from "@/components/ui/Toast";
 
 /**
  * Shell de l'espace cliente (mobile-first). La BOUSSOLE (3 mots) est affichée
- * en permanence dans le header, sur tous les écrans cliente.
+ * en permanence dans le header — mais reste VIDE tant que le Pilier 01 n'est pas
+ * VALIDÉ par la coach (les mots existent en base pendant l'édition pour le gate,
+ * mais ne deviennent la « boussole » qu'une fois validés).
  */
 export default async function ClienteLayout({ children }: { children: React.ReactNode }) {
   const user = await requireCliente();
   const cliente = await getClienteByUserId(user.id);
-  const words = boussoleFromCliente(cliente);
+  const p1 = cliente ? await getPilierForCliente(cliente.id, 1) : null;
+  const words =
+    p1?.status === "validated"
+      ? boussoleFromCliente(cliente)
+      : { who_she_is: null, what_she_likes: null, to_embody: null };
 
   return (
     <ToastProvider>

@@ -1,21 +1,21 @@
 import "server-only";
 import { getEnv } from "@/lib/env";
+import { LocalDiskAdapter } from "@/lib/storage/local-disk";
 
 /**
  * Abstraction de stockage objet (photos sensibles).
  *
- * Phase 0 : interface + sélection d'adaptateur. L'implémentation réelle arrive
- * en Phase 3/5 :
- *  - prod : IONOS Object Storage (S3-compatible), bucket PRIVÉ + URLs signées
- *    courtes ; `assets.storage_provider = 'ionos_s3'`.
- *  - dev  : adaptateur disque local derrière la même interface.
+ * - dev  : adaptateur disque local (`storage-dev/`), service via une route
+ *          protégée par session (équivalent privé des URLs signées).
+ * - prod : IONOS Object Storage (S3-compatible), bucket PRIVÉ + URLs signées
+ *          (Phase 3/5) ; `assets.storage_provider = 'ionos_s3'`.
  *
- * Règle : aucune photo n'est jamais servie en public direct — toujours via une
- * URL signée à durée limitée, et conditionnée au consentement RGPD.
+ * Règle : aucune photo n'est jamais servie en public direct, et tout upload est
+ * conditionné au consentement RGPD (vérifié par l'appelant).
  */
 
 export interface PutObjectInput {
-  /** Clé/chemin logique (ex. `clientes/<id>/colorimetrie/<uuid>.jpg`). */
+  /** Clé/chemin logique : `clientes/<clienteId>/<kind>/<uuid>.<ext>`. */
   key: string;
   body: Uint8Array | Buffer;
   contentType: string;
@@ -24,23 +24,21 @@ export interface PutObjectInput {
 export interface StorageAdapter {
   readonly provider: "ionos_s3" | "local_disk";
   put(input: PutObjectInput): Promise<{ key: string }>;
-  /** URL signée à durée limitée pour lire un objet privé. */
-  getSignedUrl(key: string, expiresInSeconds?: number): Promise<string>;
+  /** URL d'accès (locale : route protégée ; S3 : URL signée à durée limitée). */
+  getUrl(key: string, expiresInSeconds?: number): Promise<string>;
   /** Suppression (droit à l'oubli : purge des objets renvoyés par delete_cliente). */
   delete(keyOrUrl: string): Promise<void>;
 }
 
-class NotImplementedAdapter implements StorageAdapter {
-  constructor(readonly provider: "ionos_s3" | "local_disk", private phase: string) {}
+class S3NotImplementedAdapter implements StorageAdapter {
+  readonly provider = "ionos_s3" as const;
   private fail(): never {
-    throw new Error(
-      `Storage (${this.provider}) non implémenté en Phase 0 — prévu ${this.phase}.`
-    );
+    throw new Error("Storage IONOS S3 non implémenté en Phase 0/1 — prévu Phase 3/5.");
   }
   put(): Promise<{ key: string }> {
     return this.fail();
   }
-  getSignedUrl(): Promise<string> {
+  getUrl(): Promise<string> {
     return this.fail();
   }
   delete(): Promise<void> {
@@ -54,8 +52,6 @@ let cached: StorageAdapter | null = null;
 export function getStorage(): StorageAdapter {
   if (cached) return cached;
   const env = getEnv();
-  cached = env.S3_BUCKET
-    ? new NotImplementedAdapter("ionos_s3", "Phase 3/5")
-    : new NotImplementedAdapter("local_disk", "Phase 3/5");
+  cached = env.S3_BUCKET ? new S3NotImplementedAdapter() : new LocalDiskAdapter(env.APP_URL);
   return cached;
 }

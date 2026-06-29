@@ -1,13 +1,20 @@
+import Link from "next/link";
 import { cn } from "@/components/ui/cn";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { PILIERS_META, PILIERS_ORDER } from "@/lib/piliers-meta";
-import type { Pilier } from "@/lib/db/types";
+import type { Pilier, PilierNumero, PilierStatus } from "@/lib/db/types";
 
 /**
  * Timeline des 4 piliers (mobile-first, verticale). Le « pas en cours » est mis
- * en évidence. Lecture seule ici (l'avancement se fait en Phase 1).
+ * en évidence. Chaque pilier non verrouillé est cliquable si `getHref` est fourni.
  */
-export function PiliersTimeline({ piliers }: { piliers: Pilier[] }) {
+export function PiliersTimeline({
+  piliers,
+  getHref,
+}: {
+  piliers: Pilier[];
+  getHref?: (numero: PilierNumero, status: PilierStatus) => string | null;
+}) {
   const byNumero = new Map(piliers.map((p) => [p.numero, p]));
 
   return (
@@ -17,17 +24,10 @@ export function PiliersTimeline({ piliers }: { piliers: Pilier[] }) {
         const pilier = byNumero.get(numero);
         const status = pilier?.status ?? "locked";
         const active = status === "in_progress" || status === "needs_revision";
+        const href = getHref?.(numero, status) ?? null;
 
-        return (
-          <li
-            key={numero}
-            className={cn(
-              "flex items-start gap-3 rounded-2xl border p-4",
-              active
-                ? "border-navy-300 bg-navy-50/60"
-                : "border-navy-100 bg-white"
-            )}
-          >
+        const inner = (
+          <>
             <span
               className={cn(
                 "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-sm",
@@ -48,6 +48,24 @@ export function PiliersTimeline({ piliers }: { piliers: Pilier[] }) {
               </div>
               <p className="mt-0.5 text-sm text-navy-500">{meta.sous_titre}</p>
             </div>
+          </>
+        );
+
+        const boxClass = cn(
+          "flex items-start gap-3 rounded-2xl border p-4",
+          active ? "border-navy-300 bg-navy-50/60" : "border-navy-100 bg-white",
+          href && "transition-colors hover:border-navy-300"
+        );
+
+        return (
+          <li key={numero}>
+            {href ? (
+              <Link href={href} className={boxClass}>
+                {inner}
+              </Link>
+            ) : (
+              <div className={boxClass}>{inner}</div>
+            )}
           </li>
         );
       })}

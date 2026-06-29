@@ -1,8 +1,10 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import type { SafeUser, UserRole } from "@/lib/db/types";
+import type { Cliente, SafeUser, UserRole } from "@/lib/db/types";
 import { getSafeUserById } from "@/lib/db/users";
+import { getClienteByUserId } from "@/lib/db/clientes";
+import { hasConsent } from "@/lib/db/consents";
 import {
   SESSION_COOKIE,
   sessionCookieOptions,
@@ -85,6 +87,23 @@ export async function requireCliente(): Promise<SafeUser> {
   if (current.user.role !== "cliente") redirect(homePathForRole(current.user.role));
   if (current.user.must_change_password) redirect("/changer-mot-de-passe");
   return current.user;
+}
+
+/**
+ * Exige une cliente AYANT terminé l'onboarding (consentement « traitement des
+ * données » accordé). Sinon → redirige vers l'onboarding. Renvoie le profil.
+ */
+export async function requireClienteOnboarded(): Promise<{
+  user: SafeUser;
+  cliente: Cliente;
+}> {
+  const user = await requireCliente();
+  const cliente = await getClienteByUserId(user.id);
+  if (!cliente) redirect("/login");
+  if (!(await hasConsent(cliente.id, "traitement_donnees"))) {
+    redirect("/espace/onboarding");
+  }
+  return { user, cliente };
 }
 
 /** Exige le rôle coach + applique la redirection « changement forcé ». */

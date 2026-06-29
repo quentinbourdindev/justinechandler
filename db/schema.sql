@@ -1,18 +1,8 @@
--- =====================================================================
--- schema.sql — SCHÉMA CONSOLIDÉ (généré, ne pas éditer à la main)
--- ---------------------------------------------------------------------
--- Source de vérité = migrations/*.sql appliquées dans l'ordre.
--- Régénérer après toute migration :
---   pg_dump -d image_coaching --schema-only --no-owner --no-privileges \
---           -T schema_migrations > schema.sql
--- (la table d'orchestration schema_migrations est volontairement exclue)
--- =====================================================================
-
 --
 -- PostgreSQL database dump
 --
 
-\restrict tyZvXRdhOKqgbMIZ94OsilKd7MrO0dufl0LONO1SwmypTot2us0wo53UDuYOf07
+\restrict jdGsk1rPMdKUtHPIVHDY2bqjwcAaFpcVsh76cLDo9JFB7yv9fSVMaeGhUSVrWSn
 
 -- Dumped from database version 16.13 (Homebrew)
 -- Dumped by pg_dump version 16.13 (Homebrew)
@@ -141,7 +131,8 @@ COMMENT ON TYPE public.cliente_status IS 'Statut global de l''accompagnement : o
 
 CREATE TYPE public.consent_scope AS ENUM (
     'photos',
-    'traitement_donnees'
+    'traitement_donnees',
+    'ai_photo_processing'
 );
 
 
@@ -149,7 +140,7 @@ CREATE TYPE public.consent_scope AS ENUM (
 -- Name: TYPE consent_scope; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON TYPE public.consent_scope IS 'Périmètre d''un consentement RGPD : photos (données sensibles) ou traitement_donnees.';
+COMMENT ON TYPE public.consent_scope IS 'Périmètre d''un consentement RGPD : photos (données sensibles), traitement_donnees, ou ai_photo_processing (envoi de photos à l''IA Mistral).';
 
 
 --
@@ -3505,5 +3496,5 @@ ALTER TABLE ONLY public.validations
 -- PostgreSQL database dump complete
 --
 
-\unrestrict tyZvXRdhOKqgbMIZ94OsilKd7MrO0dufl0LONO1SwmypTot2us0wo53UDuYOf07
+\unrestrict jdGsk1rPMdKUtHPIVHDY2bqjwcAaFpcVsh76cLDo9JFB7yv9fSVMaeGhUSVrWSn
 

@@ -75,3 +75,56 @@ export async function countUnreadNotifications(recipientId: string): Promise<num
   `;
   return rows[0]?.n ?? 0;
 }
+
+/** Marque toutes les notifications d'un destinataire comme lues. */
+export async function markAllNotificationsRead(recipientId: string): Promise<void> {
+  await sql`
+    UPDATE notifications
+       SET read_at = now()
+     WHERE recipient_id = ${recipientId} AND read_at IS NULL
+  `;
+}
+
+/**
+ * Notifie toutes les coachs qu'un pilier a été soumis (convention RGPD :
+ * payload.cliente_id). Tolérant : n'échoue pas le flux si la notif échoue.
+ */
+export async function notifyCoachesPilierSubmitted(input: {
+  coachUserIds: string[];
+  clienteId: string;
+  clienteName: string;
+  numero: number;
+}): Promise<void> {
+  await Promise.all(
+    input.coachUserIds.map((coachId) =>
+      createNotification({
+        recipientId: coachId,
+        type: "pilier_submitted",
+        clienteId: input.clienteId,
+        payload: { pilier: input.numero, cliente: input.clienteName },
+      })
+    )
+  );
+}
+
+/** Notifie la cliente de la décision de la coach (validé / à retoucher). */
+export async function notifyClienteValidation(input: {
+  clienteUserId: string;
+  clienteId: string;
+  numero: number;
+  validated: boolean;
+  comment: string | null;
+}): Promise<void> {
+  await createNotification({
+    recipientId: input.clienteUserId,
+    type: input.validated ? "pilier_validated" : "pilier_needs_revision",
+    clienteId: input.clienteId,
+    payload: {
+      pilier: input.numero,
+      message: input.validated
+        ? `Ton pilier ${input.numero} est validé !`
+        : `Ton pilier ${input.numero} est à retoucher.`,
+      ...(input.comment ? { comment: input.comment } : {}),
+    },
+  });
+}

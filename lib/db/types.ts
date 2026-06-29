@@ -27,6 +27,10 @@ export type PilierStatus = (typeof PILIER_STATUSES)[number];
 export const VALIDATION_DECISIONS = ["validated", "needs_revision"] as const;
 export type ValidationDecision = (typeof VALIDATION_DECISIONS)[number];
 
+export function isValidationDecision(v: string): v is ValidationDecision {
+  return (VALIDATION_DECISIONS as readonly string[]).includes(v);
+}
+
 export const ASSET_TYPES = [
   "piece_photo",
   "moodboard",
@@ -49,7 +53,11 @@ export type TriCriterion = (typeof TRI_CRITERIA)[number];
 export const MORPHO_TYPES = ["H", "X", "A", "V", "O", "8"] as const;
 export type MorphoType = (typeof MORPHO_TYPES)[number];
 
-export const CONSENT_SCOPES = ["photos", "traitement_donnees"] as const;
+export const CONSENT_SCOPES = [
+  "photos",
+  "traitement_donnees",
+  "ai_photo_processing",
+] as const;
 export type ConsentScope = (typeof CONSENT_SCOPES)[number];
 
 export const WORD_SLOTS = ["who_she_is", "what_she_likes", "to_embody"] as const;

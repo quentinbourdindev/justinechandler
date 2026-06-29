@@ -1,6 +1,6 @@
 import "server-only";
 import { sql } from "@/lib/db/client";
-import type { BoussoleWords, Cliente } from "@/lib/db/types";
+import type { BoussoleWords, Cliente, ClienteStatus, WordSlot } from "@/lib/db/types";
 
 /** Profil cliente par compte (session). */
 export async function getClienteByUserId(userId: string): Promise<Cliente | null> {
@@ -49,6 +49,38 @@ export function computeAge(birthDate: string | null): number | null {
   const m = now.getUTCMonth() - d.getUTCMonth();
   if (m < 0 || (m === 0 && now.getUTCDate() < d.getUTCDate())) age--;
   return age;
+}
+
+/**
+ * Écrit un mot-boussole (Pilier 1). Donnée cliente (pas de logique base) ; le
+ * gate de validation P1 exige que les 3 mots soient renseignés (vérifié en base
+ * par validate_pilier).
+ */
+export async function setBoussoleWord(
+  clienteId: string,
+  slot: WordSlot,
+  value: string
+): Promise<void> {
+  const v = value.trim();
+  switch (slot) {
+    case "who_she_is":
+      await sql`UPDATE clientes SET word_who_she_is = ${v} WHERE id = ${clienteId}`;
+      return;
+    case "what_she_likes":
+      await sql`UPDATE clientes SET word_what_she_likes = ${v} WHERE id = ${clienteId}`;
+      return;
+    case "to_embody":
+      await sql`UPDATE clientes SET word_to_embody = ${v} WHERE id = ${clienteId}`;
+      return;
+  }
+}
+
+/** Met à jour le statut d'accompagnement (ex. onboarding → in_progress). */
+export async function setClienteStatus(
+  clienteId: string,
+  status: ClienteStatus
+): Promise<void> {
+  await sql`UPDATE clientes SET status = ${status} WHERE id = ${clienteId}`;
 }
 
 /** Portefeuille coach : liste légère des clientes. */

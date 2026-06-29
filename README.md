@@ -100,8 +100,9 @@ Ils sont aussi rappelés sur la page `/login` **hors production**.
 | `npm run start` | Sert le build (en prod, préférer `node .next/standalone/server.js`). |
 | `npm run typecheck` | Vérification TypeScript stricte (`tsc --noEmit`). |
 | `npm run seed:demo` | Pose les mots de passe des comptes de démo (idempotent). |
-| `npm test` | Tests d'intégration (auth, flux mot de passe, gate) **contre la base**. |
-| `npm run demo:smoke` | Smoke-test HTTP de bout en bout (serveur lancé). `BASE=http://localhost:3100 npm run demo:smoke` |
+| `npm test` | Tests d'intégration (auth, flux mot de passe, gate, Pilier 1, consentements, upload) **contre la base**. |
+| `npm run demo:smoke` | Smoke-test HTTP auth + boussole (serveur lancé). `BASE=http://localhost:3100 npm run demo:smoke` |
+| `npm run demo:smoke:p1` | Smoke-test HTTP du parcours Pilier 1 (onboarding → soumission → validation → déblocage). |
 
 ---
 
@@ -164,11 +165,11 @@ tests/                 tests d'intégration (node:test)
 
 ## Carte des fonctionnalités par espace
 
-| Espace | Disponible (Phase 0) | À venir |
+| Espace | Disponible | À venir |
 | --- | --- | --- |
 | **Public** | Accueil, connexion | Landing complète, candidature (13 Q), prise de RDV (Phase 2) |
-| **Cliente** (mobile-first) | Connexion, changement de mot de passe forcé, dashboard (boussole + timeline des 4 piliers + notifications) | Onboarding/consentements, les 4 piliers, IA, messagerie, RGPD (Phases 1–5) |
-| **Coach** (desktop/tablette) | Connexion, dashboard (file `À valider` + portefeuille clientes) | Écran de validation, triage candidatures, dispos, messagerie (Phases 1–2–4) |
+| **Cliente** (mobile-first) | Connexion + changement de mot de passe forcé · **onboarding & consentements** · dashboard (boussole + timeline cliquable + notifications) · **Pilier 1 Identité** (3 mots + moodboard avec upload, soumission) | Piliers 2–4, IA, messagerie, RGPD (Phases 1–5) |
+| **Coach** (desktop/tablette) | Connexion · dashboard (file `À valider` + portefeuille) · **fiche cliente** · **écran de validation** (Valider / Retoucher / Commenter) | Contenu détaillé piliers 2–4, triage candidatures, dispos, messagerie (Phases 1–2–4) |
 
 ---
 
@@ -213,6 +214,18 @@ DATABASE_URL_PUBLIC=postgresql://app_anon:...@db:5432/image_coaching
 - **Hypothèse** : URLs cliente sous `/espace/*`, coach sous `/coach/*` (les
   groupes de routes `(cliente)`/`(coach)` n'ajoutent pas de segment d'URL) — pour
   un gating par préfixe simple et lisible au niveau du middleware.
+- **Migration `014`** : ajout de `ai_photo_processing` à l'enum `consent_scope`
+  (absent du schéma initial, requis par le brief) → l'onboarding capture 3
+  consentements ; prêt pour la Phase 3. `schema.sql` régénéré.
+- **Stockage** : adaptateur **disque local** activé en dev (`storage-dev/`),
+  upload **conditionné au consentement photos**, images servies par une route
+  **protégée par session** (équivalent privé des URLs signées) ; bascule IONOS
+  S3 via variables d'env en prod.
+- **Boussole** : reste **vide tant que le Pilier 1 n'est pas validé** par la
+  coach, même si les 3 mots sont déjà saisis pendant l'édition (ils existent en
+  base car le gate `validate_pilier` les exige à la validation).
+- **Tables IA** (`ai_requests` / `ai_outputs`, brief §3) absentes du schéma →
+  migration à prévoir en **Phase 3** (hors périmètre actuel).
 
 ---
 
@@ -221,7 +234,7 @@ DATABASE_URL_PUBLIC=postgresql://app_anon:...@db:5432/image_coaching
 | Phase | Contenu |
 | --- | --- |
 | **0 — Fondations** ✅ | Scaffolding, design system, `lib/*`, auth complète (login, changement forcé, guards, CSRF, rate-limit, invalidation session), comptes démo. |
-| 1 — Socle | Onboarding + consentements ; les 4 piliers (cliente) ; validation (coach) ; notifications in-app. |
+| **1 — Socle** 🚧 | **Tranche 1 livrée** : onboarding + consentements, Pilier 1 (Identité) côté cliente, validation côté coach (gate de bout en bout), notifications, upload photos. **À suivre** : Piliers 2–4 + fiche cliente détaillée. |
 | 2 — Public & emails | Landing, candidature, prise de RDV ; triage candidatures ; emails transactionnels. |
 | 3 — IA Mistral | Analyses colorimétrie/morpho, conseils looks, suivi — serveur only, journalisé, sous consentement. |
 | 4 — Messagerie | Chat cliente ↔ coach temps réel (LISTEN/NOTIFY → SSE), accusés, pièces jointes. |
