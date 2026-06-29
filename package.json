@@ -11,6 +11,7 @@
     "seed:demo": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/seed-demo-passwords.ts",
     "demo:smoke": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-smoke.ts",
     "demo:smoke:p1": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-smoke-p1.ts",
+    "demo:smoke:p234": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx scripts/demo-smoke-p234.ts",
     "test": "node --conditions=react-server --env-file-if-exists=.env.local --import tsx --test tests/*.test.ts"
   },
   "dependencies": {

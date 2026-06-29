@@ -55,6 +55,19 @@ export async function getAssetForCliente(
   return rows[0] ?? null;
 }
 
+/** Photos rattachées à un pilier (P2 colorimétrie/morphologie, etc.). */
+export async function listPilierPhotos(
+  clienteId: string,
+  pilierId: string
+): Promise<Asset[]> {
+  return sql<Asset[]>`
+    SELECT id, cliente_id, pilier_id, consent_id, type, storage_url, storage_provider, created_at
+      FROM assets
+     WHERE cliente_id = ${clienteId} AND pilier_id = ${pilierId}
+     ORDER BY created_at
+  `;
+}
+
 /** Asset par id (accès coach : tous les assets). */
 export async function getAssetById(assetId: string): Promise<Asset | null> {
   const rows = await sql<Asset[]>`

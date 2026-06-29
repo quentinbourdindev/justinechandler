@@ -10,3 +10,6 @@ export * from "@/lib/db/piliers";
 export * from "@/lib/db/consents";
 export * from "@/lib/db/assets";
 export * from "@/lib/db/moodboards";
+export * from "@/lib/db/profiles";
+export * from "@/lib/db/pieces";
+export * from "@/lib/db/looks";

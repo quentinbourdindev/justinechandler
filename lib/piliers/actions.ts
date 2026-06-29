@@ -2,12 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "@/lib/auth/guards";
-import { getClienteByUserId, setBoussoleWord } from "@/lib/db/clientes";
-import {
-  getPilierById,
-  submitPilier as dbSubmitPilier,
-} from "@/lib/db/piliers";
+import { setBoussoleWord } from "@/lib/db/clientes";
+import { submitPilier as dbSubmitPilier } from "@/lib/db/piliers";
 import {
   getOrCreateMoodboardForPilier,
   addMoodboardItem,
@@ -16,31 +12,9 @@ import {
 import { getCoachUserIds } from "@/lib/db/users";
 import { notifyCoachesPilierSubmitted } from "@/lib/notifications";
 import { storeClientePhoto } from "@/lib/uploads/store";
+import { ownedEditablePilier } from "@/lib/piliers/guard";
 import { err, ok, type ActionResult } from "@/lib/action-result";
-import type { Cliente, Pilier, WordSlot } from "@/lib/db/types";
-
-const EDITABLE = new Set(["in_progress", "needs_revision"]);
-
-/**
- * Vérifie que la cliente connectée possède le pilier et qu'il est ÉDITABLE.
- * Isolation : aucune écriture sur le pilier d'une autre cliente.
- */
-async function ownedEditablePilier(
-  pilierId: string,
-  expectedNumero?: number
-): Promise<{ cliente: Cliente; pilier: Pilier } | { error: string }> {
-  const current = await getCurrentUser();
-  if (!current || current.user.role !== "cliente") return { error: "Non autorisé." };
-  const cliente = await getClienteByUserId(current.user.id);
-  if (!cliente) return { error: "Profil introuvable." };
-  const pilier = await getPilierById(pilierId);
-  if (!pilier || pilier.cliente_id !== cliente.id) return { error: "Pilier introuvable." };
-  if (expectedNumero && pilier.numero !== expectedNumero) return { error: "Pilier inattendu." };
-  if (!EDITABLE.has(pilier.status)) {
-    return { error: "Ce pilier n'est plus modifiable (soumis ou validé)." };
-  }
-  return { cliente, pilier };
-}
+import type { WordSlot } from "@/lib/db/types";
 
 /** Enregistre un mot-boussole (Pilier 1). */
 export async function saveWordAction(

@@ -53,6 +53,22 @@ export type TriCriterion = (typeof TRI_CRITERIA)[number];
 export const MORPHO_TYPES = ["H", "X", "A", "V", "O", "8"] as const;
 export type MorphoType = (typeof MORPHO_TYPES)[number];
 
+export function isMorphoType(v: string): v is MorphoType {
+  return (MORPHO_TYPES as readonly string[]).includes(v);
+}
+export function isTriDecision(v: string): v is TriDecision {
+  return (TRI_DECISIONS as readonly string[]).includes(v);
+}
+export function isTriCriterion(v: string): v is TriCriterion {
+  return (TRI_CRITERIA as readonly string[]).includes(v);
+}
+export function isWardrobeCategory(v: string): v is WardrobeCategory {
+  return (WARDROBE_CATEGORIES as readonly string[]).includes(v);
+}
+export function isWordSlot(v: string): v is WordSlot {
+  return (WORD_SLOTS as readonly string[]).includes(v);
+}
+
 export const CONSENT_SCOPES = [
   "photos",
   "traitement_donnees",

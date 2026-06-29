@@ -103,6 +103,7 @@ Ils sont aussi rappelés sur la page `/login` **hors production**.
 | `npm test` | Tests d'intégration (auth, flux mot de passe, gate, Pilier 1, consentements, upload) **contre la base**. |
 | `npm run demo:smoke` | Smoke-test HTTP auth + boussole (serveur lancé). `BASE=http://localhost:3100 npm run demo:smoke` |
 | `npm run demo:smoke:p1` | Smoke-test HTTP du parcours Pilier 1 (onboarding → soumission → validation → déblocage). |
+| `npm run demo:smoke:p234` | Smoke-test HTTP des Piliers 2→3→4 (rendu, revue coach, fiche détaillée, chaîne de gate). |
 
 ---
 
@@ -168,8 +169,8 @@ tests/                 tests d'intégration (node:test)
 | Espace | Disponible | À venir |
 | --- | --- | --- |
 | **Public** | Accueil, connexion | Landing complète, candidature (13 Q), prise de RDV (Phase 2) |
-| **Cliente** (mobile-first) | Connexion + changement de mot de passe forcé · **onboarding & consentements** · dashboard (boussole + timeline cliquable + notifications) · **Pilier 1 Identité** (3 mots + moodboard avec upload, soumission) | Piliers 2–4, IA, messagerie, RGPD (Phases 1–5) |
-| **Coach** (desktop/tablette) | Connexion · dashboard (file `À valider` + portefeuille) · **fiche cliente** · **écran de validation** (Valider / Retoucher / Commenter) | Contenu détaillé piliers 2–4, triage candidatures, dispos, messagerie (Phases 1–2–4) |
+| **Cliente** (mobile-first) | Connexion + mot de passe forcé · onboarding & consentements · dashboard (boussole + timeline cliquable + notifications) · **les 4 piliers** : P1 Identité (3 mots + moodboard), P2 Mise en valeur (colorimétrie + morphologie + recommandations), P3 Tri (garder/sortir + critères), P4 Construction (3 catégories + looks) — soumission à chaque pilier, uploads photos | IA, messagerie, RGPD, aide-achat (Phases 3–5) |
+| **Coach** (desktop/tablette) | Connexion · dashboard (file `À valider` + portefeuille) · **fiche cliente détaillée** (boussole, profils couleur/morpho, tri gardé/sorti, garde-robe + looks) · **écran de validation** par pilier (Valider / Retoucher / Commenter) | Triage candidatures, dispos, messagerie (Phases 2–4) |
 
 ---
 
@@ -234,7 +235,7 @@ DATABASE_URL_PUBLIC=postgresql://app_anon:...@db:5432/image_coaching
 | Phase | Contenu |
 | --- | --- |
 | **0 — Fondations** ✅ | Scaffolding, design system, `lib/*`, auth complète (login, changement forcé, guards, CSRF, rate-limit, invalidation session), comptes démo. |
-| **1 — Socle** 🚧 | **Tranche 1 livrée** : onboarding + consentements, Pilier 1 (Identité) côté cliente, validation côté coach (gate de bout en bout), notifications, upload photos. **À suivre** : Piliers 2–4 + fiche cliente détaillée. |
+| **1 — Socle** ✅ | Onboarding + consentements ; les **4 piliers** côté cliente (Identité, Mise en valeur, Tri, Construction) ; **validation par pilier** côté coach + **fiche cliente détaillée** ; gate de bout en bout ; notifications ; uploads photos consentement-gated. |
 | 2 — Public & emails | Landing, candidature, prise de RDV ; triage candidatures ; emails transactionnels. |
 | 3 — IA Mistral | Analyses colorimétrie/morpho, conseils looks, suivi — serveur only, journalisé, sous consentement. |
 | 4 — Messagerie | Chat cliente ↔ coach temps réel (LISTEN/NOTIFY → SSE), accusés, pièces jointes. |
