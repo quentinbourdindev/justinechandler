@@ -1,0 +1,24 @@
+# Contexte de build de l'IMAGE APP (Next standalone) — on n'embarque que ce qui
+# est nécessaire au build. La base (db/) est montée dans le conteneur postgres
+# via docker-compose (bind-mount), pas dans l'image app.
+node_modules
+.next
+.git
+.env
+.env.*
+storage-dev
+storage-prod
+
+# Non nécessaires au runtime de l'app
+db
+tests
+scripts
+*.md
+
+# Artefacts d'outillage
+.claude
+.claude-flow
+.swarm
+*.rvf
+*.rvf.lock
+.DS_Store

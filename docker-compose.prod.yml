@@ -1,0 +1,66 @@
+# =====================================================================
+# docker-compose.prod.yml — déploiement Alia (VPS IONOS).
+#   app (Next standalone) + postgres 16 + Caddy (HTTPS auto).
+# Variables lues depuis le fichier .env (NON commité — voir .env.example).
+# =====================================================================
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db:/db:ro # migrations + seed (run.sh), exécutés via `compose exec`
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    # Pas de port exposé à l'hôte : la base n'est accessible que par le réseau interne.
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL_PUBLIC: ${DATABASE_URL_PUBLIC:-}
+      SESSION_SECRET: ${SESSION_SECRET}
+      APP_URL: ${APP_URL}
+      EMAIL_FROM: ${EMAIL_FROM:-Alia <no-reply@alia.stellrstudio.fr>}
+      EMAIL_SMTP_HOST: ${EMAIL_SMTP_HOST:-}
+      EMAIL_SMTP_PORT: ${EMAIL_SMTP_PORT:-465}
+      EMAIL_SMTP_USER: ${EMAIL_SMTP_USER:-}
+      EMAIL_SMTP_PASSWORD: ${EMAIL_SMTP_PASSWORD:-}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+      S3_BUCKET: ${S3_BUCKET:-}
+    volumes:
+      - uploads:/app/storage-dev # photos (adaptateur disque local) — persistant
+    # Pas de port exposé : seul Caddy parle à l'app (réseau interne).
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  pgdata:
+  uploads:
+  caddy_data:
+  caddy_config:

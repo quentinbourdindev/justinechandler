@@ -178,9 +178,65 @@ tests/                 tests d'intégration (node:test)
 
 ## Déploiement (VPS IONOS, Docker)
 
-Les artefacts Docker (`Dockerfile`, `docker-compose.prod.yml`, `Caddyfile`) sont
-produits en **Phase 6**. L'app est déjà **Docker-ready** : `output: 'standalone'`
-et configuration **100 % par variables d'environnement** (`.env.example`).
+Artefacts Docker fournis : **`Dockerfile`** (Next standalone, multi-stage),
+**`docker-compose.prod.yml`** (app + postgres + Caddy), **`Caddyfile`** (HTTPS
+auto Let's Encrypt). Config **100 % par variables d'environnement** (`.env`, non
+commité). Cible : `https://alia.stellrstudio.fr`.
+
+### Premier déploiement
+
+Prérequis : Docker + plugin Compose sur le VPS ; DNS `alia.stellrstudio.fr` → IP
+du VPS ; ports **80/443** ouverts (firewall IONOS).
+
+```bash
+# 1. Récupérer le code dans /opt/alia (clone GitHub ou transfert direct).
+# 2. Créer le .env de prod (NON commité, chmod 600) — voir .env.example :
+#    POSTGRES_USER/PASSWORD/DB, DATABASE_URL (host = service "db"),
+#    SESSION_SECRET (openssl rand -hex 32), APP_URL=https://alia.stellrstudio.fr
+cd /opt/alia
+docker compose -f docker-compose.prod.yml up -d --build
+
+# 3. Migrations + seed de démo (base neuve) :
+docker compose -f docker-compose.prod.yml exec -T \
+  -e DATABASE_URL="postgres://alia:MOTDEPASSE@localhost:5432/alia" \
+  db bash /db/run.sh
+# 4. Mots de passe des comptes de démo (Justine/Léa/Manon) :
+docker compose -f docker-compose.prod.yml exec -T \
+  db psql "postgres://alia:MOTDEPASSE@localhost:5432/alia" -f /db/seed-demo-passwords.sql
+
+# 5. Vérifier : curl -I https://alia.stellrstudio.fr  (cert valide + 200)
+```
+
+> Emails : sans `EMAIL_SMTP_HOST`, l'app utilise l'adaptateur **console** (logs
+> Docker) et n'échoue jamais. Pour Resend : renseigner `EMAIL_SMTP_*` dans le
+> `.env` (cf. `.env.example`) puis `docker compose up -d` (recrée l'app).
+
+### Mises à jour
+
+```bash
+cd /opt/alia && git pull   # ou re-transfert
+docker compose -f docker-compose.prod.yml up -d --build
+# Nouvelles migrations éventuelles (SANS reseed, non destructif) :
+docker compose -f docker-compose.prod.yml exec -T \
+  -e DATABASE_URL="postgres://alia:MOTDEPASSE@localhost:5432/alia" \
+  db bash /db/run.sh --no-seed
+```
+
+### Sauvegardes & restauration
+
+```bash
+# Sauvegarde (à mettre en cron quotidien) :
+docker compose -f docker-compose.prod.yml exec -T db \
+  pg_dump -U alia -d alia | gzip > /opt/alia-backups/alia-$(date +%F).sql.gz
+
+# Restauration :
+gunzip -c /opt/alia-backups/alia-AAAA-MM-JJ.sql.gz | \
+  docker compose -f docker-compose.prod.yml exec -T db psql -U alia -d alia
+```
+
+Volumes Docker persistants : `pgdata` (base), `uploads` (photos), `caddy_data`
+(certificats). Le dossier d'upload local est monté sur le volume `uploads`
+(persistance entre redéploiements ; bascule IONOS S3 prévue plus tard).
 
 **Durcissement PII — rôle `app_anon` (à faire au déploiement).** Le schéma ne
 crée pas de rôle (portabilité IONOS). Créer un rôle en lecture seule sur la vue
