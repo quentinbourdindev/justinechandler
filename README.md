@@ -183,10 +183,14 @@ Artefacts Docker fournis : **`Dockerfile`** (Next standalone, multi-stage),
 auto Let's Encrypt). Config **100 % par variables d'environnement** (`.env`, non
 commité). Cible : `https://alia.stellrstudio.fr`.
 
+**Dépôt** : `git@github.com:quentinbourdindev/justinechandler.git` (branche
+`main`). Le VPS le clone/pull via une **deploy key** SSH installée côté serveur.
+
 ### Premier déploiement
 
 Prérequis : Docker + plugin Compose sur le VPS ; DNS `alia.stellrstudio.fr` → IP
-du VPS ; ports **80/443** ouverts (firewall IONOS).
+du VPS ; ports **80/443** ouverts (firewall IONOS) ; deploy key du repo en place
+sur le VPS.
 
 ```bash
 # 1. Récupérer le code dans /opt/alia (clone GitHub ou transfert direct).
@@ -213,14 +217,22 @@ docker compose -f docker-compose.prod.yml exec -T \
 
 ### Mises à jour
 
+Le code local est poussé sur GitHub, puis le VPS pull et rebuild :
+
 ```bash
-cd /opt/alia && git pull   # ou re-transfert
+# Poste de dev : git push origin main
+# Puis sur le VPS (ssh alia-vps) :
+cd /opt/alia
+git pull
 docker compose -f docker-compose.prod.yml up -d --build
 # Nouvelles migrations éventuelles (SANS reseed, non destructif) :
 docker compose -f docker-compose.prod.yml exec -T \
   -e DATABASE_URL="postgres://alia:MOTDEPASSE@localhost:5432/alia" \
   db bash /db/run.sh --no-seed
 ```
+
+> Le `.env` de prod et le script `backup.sh` du VPS ne sont pas suivis par git :
+> `git pull` ne les touche pas.
 
 ### Sauvegardes & restauration
 
